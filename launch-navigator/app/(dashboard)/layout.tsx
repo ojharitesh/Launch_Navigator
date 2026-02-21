@@ -29,11 +29,12 @@ export default function DashboardLayout({
       // Check if user has completed onboarding
       const { data: profile } = await supabase
         .from("profiles")
-        .select("id")
+        .select("state, city, business_type")
         .eq("id", user.id)
         .single();
 
-      if (!profile) {
+      // Redirect to onboarding if profile doesn't have required fields
+      if (!profile || !profile.state || !profile.city || !profile.business_type) {
         router.push("/onboarding");
         return;
       }
@@ -58,7 +59,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen flex">
       <Sidebar />
-      <main className="flex-1 bg-slate-50 overflow-auto">{children}</main>
+      <main className="flex-1 bg-slate-50 overflow-auto ml-72">{children}</main>
     </div>
   );
 }

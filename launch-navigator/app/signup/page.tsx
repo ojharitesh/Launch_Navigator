@@ -15,7 +15,6 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,61 +34,36 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      // Sign up without email confirmation
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-        },
+          data: {
+            name: "",
+            state: "",
+            city: "",
+            business_type: "",
+          }
+        }
       });
 
       if (error) throw error;
 
-      setSuccess(true);
+      // If user is created immediately (auto-confirm), redirect to onboarding
+      if (data.user) {
+        router.push("/onboarding");
+      } else {
+        // Otherwise show success message
+        alert("Please check your email to verify your account, then login.");
+        router.push("/login");
+      }
     } catch (err: any) {
       setError(err.message || "Failed to sign up");
     } finally {
       setLoading(false);
     }
   };
-
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4">
-        <div className="w-full max-w-md">
-          <div className="bg-white rounded-xl border border-slate-200 p-8 shadow-sm text-center">
-            <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg
-                className="h-8 w-8 text-green-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-4">
-              Check your email
-            </h1>
-            <p className="text-slate-600 mb-6">
-              We&apos;ve sent you a confirmation email. Click the link in the email
-              to verify your account.
-            </p>
-            <Link href="/login">
-              <Button variant="outline" className="w-full">
-                Back to Login
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 py-12 px-4">

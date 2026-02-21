@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
-import { Select } from "@/components/ui/Select";
 import { createClient } from "@/lib/supabase";
 import { US_STATES, BUSINESS_TYPES } from "@/types";
+import { seedTasks } from "@/data/seed-tasks";
 import { Rocket, ArrowRight, Check } from "lucide-react";
 
 export default function OnboardingPage() {
@@ -60,9 +60,42 @@ export default function OnboardingPage() {
         .or(`business_type.eq.${businessType},business_type.eq.general`)
         .order("order", { ascending: true });
 
+      // If no tasks in DB, use seed data filtered by state and business type
+      let tasksToAssign = tasks;
+      if (!tasks || tasks.length === 0) {
+        tasksToAssign = seedTasks
+          .filter((task) => {
+            const stateMatch = stateCode && stateCode !== "general"
+              ? task.state === stateCode || task.state === "general"
+              : task.state === "general";
+            const typeMatch = businessType
+              ? task.business_type === businessType || task.business_type === "general"
+              : task.business_type === "general";
+            return stateMatch && typeMatch;
+          })
+          .map((task, index) => ({
+            id: crypto.randomUUID(),
+            title: task.title,
+            description: task.description,
+            state: task.state,
+            business_type: task.business_type,
+            cost_estimate: task.cost_estimate,
+            timeline_estimate: task.timeline_estimate,
+            required_documents: task.required_documents,
+            official_link: task.official_link,
+            category: task.category,
+            order: task.order || index,
+          }));
+
+        // Insert tasks into DB
+        if (tasksToAssign.length > 0) {
+          await supabase.from("tasks").upsert(tasksToAssign, { onConflict: "id" });
+        }
+      }
+
       // Create user tasks
-      if (tasks && tasks.length > 0) {
-        const userTasks = tasks.map((task) => ({
+      if (tasksToAssign && tasksToAssign.length > 0) {
+        const userTasks = tasksToAssign.map((task) => ({
           id: crypto.randomUUID(),
           user_id: user.id,
           task_id: task.id,
