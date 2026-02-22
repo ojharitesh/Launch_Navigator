@@ -147,8 +147,7 @@ export default function DashboardPage() {
           Welcome back, {profile?.name || "Entrepreneur"}!
         </h1>
         <p className="text-slate-600 mt-2">
-          Here&apos;s what&apos;s happening with your business in{" "}
-          {profile?.city}, {profile?.state}
+          Running a {profile?.business_type || "business"} in {profile?.city}, {profile?.state}
         </p>
       </div>
 
@@ -292,13 +291,19 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
-            <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
+            <ListChecks className="h-12 w-12 text-slate-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-slate-900">
-              All caught up!
+              Set Up Your Business
             </h3>
             <p className="text-slate-500 mt-2">
-              You&apos;ve completed all your tasks. Great job!
+              Complete the onboarding to get your personalized task list
             </p>
+            <a
+              href="/onboarding"
+              className="inline-block mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+            >
+              Get Started
+            </a>
           </div>
         )}
       </div>

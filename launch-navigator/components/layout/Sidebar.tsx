@@ -46,7 +46,7 @@ export function Sidebar() {
       <div
         className={cn(
           "flex flex-col h-screen bg-slate-900 text-white fixed left-0 top-0 transition-all duration-300 z-40",
-          collapsed ? "w-0 md:w-20" : "w-72"
+          collapsed ? "w-0 -translate-x-full md:w-20 md:translate-x-0" : "w-72"
         )}
       >
         {/* Logo */}

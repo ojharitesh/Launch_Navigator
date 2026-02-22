@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { createClient } from "@/lib/supabase";
-import type { User } from "@supabase/supabase-js";
 
 export default function DashboardLayout({
   children,
@@ -23,19 +22,6 @@ export default function DashboardLayout({
 
       if (!user) {
         router.push("/login");
-        return;
-      }
-
-      // Check if user has completed onboarding
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("state, city, business_type")
-        .eq("id", user.id)
-        .single();
-
-      // Redirect to onboarding if profile doesn't have required fields
-      if (!profile || !profile.state || !profile.city || !profile.business_type) {
-        router.push("/onboarding");
         return;
       }
 
@@ -59,7 +45,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen flex">
       <Sidebar />
-      <main className="flex-1 bg-slate-50 overflow-auto ml-72">{children}</main>
+      <main className="flex-1 bg-slate-50 overflow-auto ml-0 md:ml-72">{children}</main>
     </div>
   );
 }

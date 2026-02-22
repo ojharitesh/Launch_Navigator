@@ -29,21 +29,6 @@ export default function LoginPage() {
 
       if (error) throw error;
 
-      // Check if user has completed onboarding
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("id", user.id)
-          .single();
-
-        if (!profile) {
-          router.push("/onboarding");
-          return;
-        }
-      }
-
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message || "Failed to sign in");
