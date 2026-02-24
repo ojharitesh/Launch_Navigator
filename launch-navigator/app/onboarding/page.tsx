@@ -10,6 +10,93 @@ import { US_STATES, BUSINESS_TYPES } from "@/types";
 import { seedTasks } from "@/data/seed-tasks";
 import { Rocket, ArrowRight, Check, Building2, MapPin, Briefcase, Info } from "lucide-react";
 
+const DEMO_TASKS = [
+  {
+    id: "demo-1",
+    title: "Get an Employer Identification Number (EIN)",
+    description: "Apply for a federal tax ID number from the IRS. This is like your business's Social Security number.",
+    detailed_steps: ["Go to IRS website", "Click Apply Online Now", "Fill out the application", "Get your EIN instantly"],
+    cost_estimate: "Free",
+    cost_details: "The IRS does not charge for EIN applications",
+    timeline_estimate: "Immediate",
+    timeline_details: "You get your EIN instantly when applying online",
+    required_documents: ["Social Security Number (SSN)", "Business name", "Business address"],
+    official_link: "https://www.irs.gov/ein",
+    category: "tax",
+    order: 1,
+  },
+  {
+    id: "demo-2",
+    title: "Choose a Business Structure",
+    description: "Decide what type of business entity you want to form - Sole Proprietorship, LLC, Corporation, or Partnership.",
+    detailed_steps: ["Sole Proprietorship: Simplest form", "LLC: Protects your personal assets", "Corporation: For larger businesses", "Consult with an attorney if unsure"],
+    cost_estimate: "$50 - $800",
+    cost_details: "Costs vary by state",
+    timeline_estimate: "1-4 weeks",
+    timeline_details: "Sole Prop is immediate, LLCs take 1-4 weeks",
+    required_documents: ["Business name", "Owner information"],
+    official_link: null,
+    category: "legal",
+    order: 2,
+  },
+  {
+    id: "demo-3",
+    title: "Register Your Business Name",
+    description: "Register your business name with your state to operate legally.",
+    detailed_steps: ["Choose a business name", "File a DBA (Doing Business As)", "Visit county clerk or state website", "Pay the filing fee"],
+    cost_estimate: "$25 - $100",
+    cost_details: "County filing fees vary",
+    timeline_estimate: "1-3 weeks",
+    timeline_details: "Processing takes 1-2 weeks",
+    required_documents: ["Business name", "Owner name and address", "Nature of business"],
+    official_link: null,
+    category: "registration",
+    order: 3,
+  },
+  {
+    id: "demo-4",
+    title: "Open a Business Bank Account",
+    description: "Open a separate bank account for your business to keep finances separate.",
+    detailed_steps: ["Bring EIN letter to bank", "Bring business formation documents", "Bring your ID", "Choose a business checking account"],
+    cost_estimate: "$0 - $30",
+    cost_details: "Many banks offer free business checking",
+    timeline_estimate: "1-2 days",
+    timeline_details: "Can open online or in branch",
+    required_documents: ["EIN letter", "Business formation documents", "ID"],
+    official_link: null,
+    category: "operations",
+    order: 4,
+  },
+  {
+    id: "demo-5",
+    title: "Get Business Insurance",
+    description: "Protect your business with the right insurance coverage.",
+    detailed_steps: ["Get General Liability Insurance", "Consider Professional Liability", "Get Workers Compensation if needed", "Get quotes from multiple companies"],
+    cost_estimate: "$500 - $3,000/year",
+    cost_details: "Varies by business type and size",
+    timeline_estimate: "1-2 weeks",
+    timeline_details: "Can get quotes same day",
+    required_documents: ["Business information", "Estimated revenue", "Number of employees"],
+    official_link: null,
+    category: "insurance",
+    order: 5,
+  },
+  {
+    id: "demo-6",
+    title: "Set Up Accounting System",
+    description: "Create a system to track your income, expenses, and taxes.",
+    detailed_steps: ["Choose accounting software", "Set up your business", "Connect bank account", "Track income and expenses", "Set aside money for taxes"],
+    cost_estimate: "$0 - $50/month",
+    cost_details: "Wave is free, QuickBooks starts at $25/month",
+    timeline_estimate: "1-3 days",
+    timeline_details: "Can set up in a few hours",
+    required_documents: ["Bank statements", "Receipts"],
+    official_link: null,
+    category: "operations",
+    order: 6,
+  },
+];
+
 export default function OnboardingPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -17,7 +104,7 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [name, setName] = useState("");
-  const [state, setState] = useState("");
+  const [selectedState, setSelectedState] = useState("");
   const [city, setCity] = useState("");
   const [businessType, setBusinessType] = useState("");
   const supabase = createClient();
@@ -38,49 +125,38 @@ export default function OnboardingPage() {
       await supabase.from("profiles").upsert({
         id: user.id,
         name,
-        state,
+        state: selectedState,
         city,
         business_type: businessType,
         subscription_plan: "free",
         updated_at: new Date().toISOString(),
       });
 
-      const stateCode = US_STATES.find((s) => s.name === state)?.code || state;
-
-      // Filter ALL relevant tasks
-      const filteredTasks = seedTasks.filter((task) => {
-        if (task.state === "general" && task.business_type === "general") return true;
-        if (task.business_type === businessType) return true;
-        if (task.state === stateCode) return true;
-        if (task.business_type === "general") return true;
-        return false;
-      });
-
-      // Create tasks and assign to user
-      for (const task of filteredTasks) {
-        const taskId = crypto.randomUUID();
-
+      // Use demo tasks - insert directly into user_tasks
+      for (const task of DEMO_TASKS) {
+        // Insert task into tasks table first
         await supabase.from("tasks").upsert({
-          id: taskId,
+          id: task.id,
           title: task.title,
           description: task.description,
-          detailed_steps: task.detailedSteps || [],
-          state: task.state,
-          business_type: task.business_type,
-          cost_estimate: task.cost_estimate || "",
-          cost_details: task.cost_details || "",
-          timeline_estimate: task.timeline_estimate || "",
-          timeline_details: task.timeline_details || "",
-          required_documents: task.required_documents || [],
+          detailed_steps: task.detailed_steps,
+          state: "general",
+          business_type: "general",
+          cost_estimate: task.cost_estimate,
+          cost_details: task.cost_details,
+          timeline_estimate: task.timeline_estimate,
+          timeline_details: task.timeline_details,
+          required_documents: task.required_documents,
           official_link: task.official_link,
           category: task.category,
           order: task.order,
         }, { onConflict: "id" });
 
+        // Then create user task
         await supabase.from("user_tasks").insert({
           id: crypto.randomUUID(),
           user_id: user.id,
-          task_id: taskId,
+          task_id: task.id,
           completed: false,
         });
       }
@@ -95,7 +171,7 @@ export default function OnboardingPage() {
 
   const canProceed = () => {
     if (step === 1) return name.trim().length > 0;
-    if (step === 2) return state && city.trim().length > 0;
+    if (step === 2) return selectedState && city.trim().length > 0;
     if (step === 3) return businessType !== "";
     return false;
   };
@@ -151,11 +227,11 @@ export default function OnboardingPage() {
                     <MapPin className="h-6 w-6 text-green-600" />
                   </div>
                   <h2 className="text-xl font-bold text-slate-900">Where is your business located?</h2>
-                  <p className="text-slate-500 mt-2">Regulations and requirements vary by state and city</p>
+                  <p className="text-slate-500 mt-2">Regulations and requirements vary by state</p>
                 </div>
                 <div>
                   <Label htmlFor="state" className="text-base font-medium"> State</Label>
-                  <select id="state" value={state} onChange={(e) => setState(e.target.value)} className="flex h-12 mt-2 w-full rounded-lg border border-input bg-background px-4 py-2 text-lg">
+                  <select id="state" value={selectedState} onChange={(e) => setSelectedState(e.target.value)} className="flex h-12 mt-2 w-full rounded-lg border border-input bg-background px-4 py-2 text-lg">
                     <option value="">Select your state</option>
                     {US_STATES.map((s) => (<option key={s.code} value={s.name}>{s.name}</option>))}
                   </select>
