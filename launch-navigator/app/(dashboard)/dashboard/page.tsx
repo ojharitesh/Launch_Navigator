@@ -8,6 +8,7 @@ import { ProgressCard } from "@/components/dashboard/ProgressCard";
 import { AlertCard } from "@/components/dashboard/AlertCard";
 import { createClient } from "@/lib/supabase";
 import { formatDate, getDaysUntilText, isWithinDays } from "@/lib/utils";
+import type { DashboardStats, Inspection, License, Profile, UserTask } from "@/types";
 import {
   ListChecks,
   Shield,
@@ -22,16 +23,11 @@ import {
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<{
-    profile: any;
-    tasks: any[];
-    licenses: any[];
-    inspections: any[];
-    stats: {
-      totalTasks: number;
-      completedTasks: number;
-      upcomingDeadlines: number;
-      complianceAlerts: number;
-    };
+    profile: Profile | null;
+    tasks: UserTask[];
+    licenses: License[];
+    inspections: Inspection[];
+    stats: DashboardStats;
   } | null>(null);
 
   const supabase = createClient();
@@ -47,14 +43,16 @@ export default function DashboardPage() {
         if (!user) return;
 
         // Fetch profile
-        const { data: profile } = await supabase
+        const { data: profileData } = await supabase
           .from("profiles")
           .select("*")
           .eq("id", user.id)
           .single();
 
+        const profile = profileData as Profile | null;
+
         // Fetch user tasks with task details
-        const { data: userTasks } = await supabase
+        const { data: userTasksData } = await supabase
           .from("user_tasks")
           .select(`
             *,
@@ -63,42 +61,48 @@ export default function DashboardPage() {
           .eq("user_id", user.id)
           .order("task.order", { ascending: true });
 
+        const userTasks = (userTasksData || []) as UserTask[];
+
         // Fetch licenses
-        const { data: licenses } = await supabase
+        const { data: licensesData } = await supabase
           .from("licenses")
           .select("*")
           .eq("user_id", user.id)
           .order("expiration_date", { ascending: true });
 
+        const licenses = (licensesData || []) as License[];
+
         // Fetch inspections
-        const { data: inspections } = await supabase
+        const { data: inspectionsData } = await supabase
           .from("inspections")
           .select("*")
           .eq("user_id", user.id);
+
+        const inspections = (inspectionsData || []) as Inspection[];
 
         // Calculate upcoming license expirations
         const thirtyDaysFromNow = new Date();
         thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
-        const upcomingLicenses = licenses?.filter(
-          (l) => new Date(l.expiration_date) <= thirtyDaysFromNow
-        ) || [];
+        const upcomingLicenses = licenses.filter(
+          (license) => new Date(license.expiration_date) <= thirtyDaysFromNow
+        );
 
         // Calculate upcoming inspections
-        const upcomingInspectionList = inspections?.filter(
-          (i) =>
-            i.next_inspection_estimate &&
-            new Date(i.next_inspection_estimate) <= thirtyDaysFromNow
-        ) || [];
+        const upcomingInspectionList = inspections.filter(
+          (inspection) =>
+            inspection.next_inspection_estimate &&
+            new Date(inspection.next_inspection_estimate) <= thirtyDaysFromNow
+        );
 
         setData({
           profile,
-          tasks: userTasks || [],
-          licenses: licenses || [],
-          inspections: inspections || [],
+          tasks: userTasks,
+          licenses,
+          inspections,
           stats: {
-            totalTasks: userTasks?.length || 0,
-            completedTasks: userTasks?.filter((t) => t.completed).length || 0,
+            totalTasks: userTasks.length,
+            completedTasks: userTasks.filter((task) => task.completed).length,
             upcomingDeadlines: upcomingLicenses.length,
             complianceAlerts: upcomingLicenses.length + upcomingInspectionList.length,
           },
@@ -128,15 +132,17 @@ export default function DashboardPage() {
 
   // Get upcoming deadlines
   const upcomingTasks = tasks
-    ?.filter((t) => !t.completed)
+    ?.filter((task) => !task.completed)
     .slice(0, 3);
 
-  const upcomingLicenses = licenses?.filter((l) =>
-    isWithinDays(l.expiration_date, 30)
+  const upcomingLicenses = licenses?.filter((license) =>
+    isWithinDays(license.expiration_date, 30)
   ).slice(0, 2);
 
   const upcomingInspectionsList = inspections?.filter(
-    (i) => i.next_inspection_estimate && isWithinDays(i.next_inspection_estimate, 30)
+    (inspection) =>
+      inspection.next_inspection_estimate &&
+      isWithinDays(inspection.next_inspection_estimate, 30)
   ).slice(0, 2);
 
   return (
@@ -233,7 +239,7 @@ export default function DashboardPage() {
             Upcoming Deadlines
           </h2>
           <div className="space-y-3">
-            {upcomingLicenses?.map((license: any) => (
+            {upcomingLicenses?.map((license) => (
               <AlertCard
                 key={license.id}
                 title={`${license.license_name} Expiring`}
@@ -265,7 +271,7 @@ export default function DashboardPage() {
 
         {upcomingTasks && upcomingTasks.length > 0 ? (
           <div className="space-y-3">
-            {upcomingTasks.map((userTask: any) => (
+            {upcomingTasks.map((userTask) => (
               <div
                 key={userTask.id}
                 className="flex items-center gap-4 p-4 bg-white rounded-lg border border-slate-200"
