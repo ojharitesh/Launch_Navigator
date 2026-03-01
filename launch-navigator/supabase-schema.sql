@@ -70,12 +70,33 @@ ALTER TABLE user_tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE inspections ENABLE ROW LEVEL SECURITY;
 
+-- Enforce RLS even for table owners
+ALTER TABLE profiles FORCE ROW LEVEL SECURITY;
+ALTER TABLE tasks FORCE ROW LEVEL SECURITY;
+ALTER TABLE user_tasks FORCE ROW LEVEL SECURITY;
+ALTER TABLE licenses FORCE ROW LEVEL SECURITY;
+ALTER TABLE inspections FORCE ROW LEVEL SECURITY;
+
+-- Least-privilege grants for API roles
+REVOKE ALL ON TABLE profiles FROM anon, authenticated;
+REVOKE ALL ON TABLE tasks FROM anon, authenticated;
+REVOKE ALL ON TABLE user_tasks FROM anon, authenticated;
+REVOKE ALL ON TABLE licenses FROM anon, authenticated;
+REVOKE ALL ON TABLE inspections FROM anon, authenticated;
+
+GRANT SELECT, INSERT, UPDATE ON TABLE profiles TO authenticated;
+GRANT SELECT ON TABLE tasks TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE user_tasks TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE licenses TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE inspections TO authenticated;
+
 -- Profiles policies
 CREATE POLICY "Users can view own profile" ON profiles
     FOR SELECT USING (auth.uid() = id);
 
 CREATE POLICY "Users can update own profile" ON profiles
-    FOR UPDATE USING (auth.uid() = id);
+    FOR UPDATE USING (auth.uid() = id)
+    WITH CHECK (auth.uid() = id);
 
 CREATE POLICY "Users can insert own profile" ON profiles
     FOR INSERT WITH CHECK (auth.uid() = id);
@@ -92,7 +113,8 @@ CREATE POLICY "Users can insert own user_tasks" ON user_tasks
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update own user_tasks" ON user_tasks
-    FOR UPDATE USING (auth.uid() = user_id);
+    FOR UPDATE USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete own user_tasks" ON user_tasks
     FOR DELETE USING (auth.uid() = user_id);
@@ -105,7 +127,8 @@ CREATE POLICY "Users can insert own licenses" ON licenses
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update own licenses" ON licenses
-    FOR UPDATE USING (auth.uid() = user_id);
+    FOR UPDATE USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete own licenses" ON licenses
     FOR DELETE USING (auth.uid() = user_id);
@@ -118,7 +141,8 @@ CREATE POLICY "Users can insert own inspections" ON inspections
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can update own inspections" ON inspections
-    FOR UPDATE USING (auth.uid() = user_id);
+    FOR UPDATE USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 CREATE POLICY "Users can delete own inspections" ON inspections
     FOR DELETE USING (auth.uid() = user_id);
@@ -147,6 +171,8 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+ALTER FUNCTION public.handle_new_user() SET search_path = public;
 
 -- Trigger for auto-creating profile
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
