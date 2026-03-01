@@ -1,6 +1,20 @@
 import { createBrowserClient } from '@supabase/ssr';
 
-let browserClient: ReturnType<typeof createBrowserClient> | null = null;
+type SupabaseBrowserClient = ReturnType<typeof createBrowserClient>;
+
+let browserClient: SupabaseBrowserClient | null = null;
+let missingEnvClient: SupabaseBrowserClient | null = null;
+
+function createMissingEnvClient(): SupabaseBrowserClient {
+  const message =
+    'Missing Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY';
+
+  return new Proxy({} as SupabaseBrowserClient, {
+    get() {
+      throw new Error(message);
+    },
+  });
+}
 
 export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -8,12 +22,17 @@ export function createClient() {
 
   if (!supabaseUrl || !supabaseAnonKey) {
     if (typeof window === 'undefined') {
-      return {} as ReturnType<typeof createBrowserClient>;
+      return {} as SupabaseBrowserClient;
     }
 
-    throw new Error(
-      'Missing Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY'
-    );
+    if (!missingEnvClient) {
+      console.error(
+        'Missing Supabase environment variables. Configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your deployment environment.'
+      );
+      missingEnvClient = createMissingEnvClient();
+    }
+
+    return missingEnvClient;
   }
 
   if (!browserClient) {
