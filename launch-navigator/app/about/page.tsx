@@ -52,7 +52,7 @@ export default function AboutPage() {
             <div className="col-span-12 lg:col-span-6">
               <div className="rounded-2xl overflow-hidden shadow-lg h-96 relative">
                 <Image
-                  src="/images/professional.jpg"
+                  src="/images/coffeeshop.jpg"
                   alt="Professional team collaboration"
                   fill
                   className="object-cover"
