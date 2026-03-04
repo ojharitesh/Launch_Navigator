@@ -85,7 +85,7 @@ export default function SignupPage() {
                 />
               </svg>
             </div>
-            <span className="text-2xl font-bold text-slate-900">LaunchNavigator</span>
+            <span className="text-2xl font-bold text-slate-900">BizMap</span>
           </Link>
           <h1 className="text-2xl font-bold text-slate-900">Create an account</h1>
           <p className="text-slate-600 mt-2">Start your business journey</p>

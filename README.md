@@ -1,4 +1,4 @@
-# LaunchNavigator
+# BizMap
 
 A full-stack SaaS platform that helps entrepreneurs start and operate small businesses by guiding them through legal setup, compliance requirements, operational tools, and ongoing regulatory monitoring.
 

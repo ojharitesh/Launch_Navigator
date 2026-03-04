@@ -57,7 +57,7 @@ export function Sidebar() {
           <div className="h-9 w-9 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
             <Rocket className="h-5 w-5 text-white" />
           </div>
-          {!collapsed && <span className="text-lg font-bold">LaunchNavigator</span>}
+          {!collapsed && <span className="text-lg font-bold">BizMap</span>}
         </div>
 
         {/* Collapse button (desktop) */}

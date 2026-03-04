@@ -8,7 +8,7 @@ import { ProgressCard } from "@/components/dashboard/ProgressCard";
 import { AlertCard } from "@/components/dashboard/AlertCard";
 import { createClient } from "@/lib/supabase";
 import { formatDate, getDaysUntilText, isWithinDays } from "@/lib/utils";
-import type { DashboardStats, Inspection, License, Profile, UserTask } from "@/types";
+import type { DashboardStats, Inspection, License, Profile, UserTask, BusinessType } from "@/types";
 import {
   ListChecks,
   Shield,
@@ -19,6 +19,100 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
+
+// Helper functions for business type customization
+const getBusinessTypeInsights = (businessType: BusinessType): string[] => {
+  const insights: Record<BusinessType, string[]> = {
+    restaurant: [
+      'Food handler permits and health department certifications required',
+      'Plan for regular health inspections and compliance checks',
+      'Liquor licenses may be needed depending on menu',
+      'Equipment and facility standards vary by state',
+    ],
+    retail: [
+      'Sales tax permits required for your state',
+      'Product liability insurance strongly recommended',
+      'Zoning compliance for retail locations',
+      'Employee wage and hour regulations apply',
+    ],
+    construction: [
+      'Contractor licensing often required at state/local level',
+      'Workers compensation insurance is typically mandatory',
+      'Building permits needed for each project',
+      'Safety certifications and compliance documentation essential',
+    ],
+    healthcare: [
+      'Professional licensing varies by practitioner type',
+      'HIPAA compliance and data security critical',
+      'Malpractice insurance required',
+      'State board requirements and continuing education',
+    ],
+    manufacturing: [
+      'Environmental permits and compliance checks',
+      'OSHA safety regulations and reporting requirements',
+      'Product liability and equipment insurance',
+      'Regular facility inspections and certifications',
+    ],
+    technology: [
+      'Data privacy and security policies required',
+      'IP protection and patent considerations',
+      'Client agreements and SLAs important',
+      'Cyber liability insurance recommended',
+    ],
+    consulting: [
+      'Professional liability insurance recommended',
+      'Client agreements and clear service terms',
+      'Industry certifications may be valued',
+      'Tax planning for independent contractors',
+    ],
+    fitness: [
+      'Liability waivers and insurance critical',
+      'Health department permits for facilities',
+      'Staff certifications and qualifications',
+      'ADA compliance and accessibility requirements',
+    ],
+    salon: [
+      'Cosmetology board licenses required',
+      'Health and safety certifications mandatory',
+      'Equipment and facility standards',
+      'Chemical handling and disposal regulations',
+    ],
+    auto_repair: [
+      'ASE certifications valued by customers',
+      'Environmental compliance for fluid disposal',
+      'Equipment safety and maintenance standards',
+      'Liability insurance for customer vehicles',
+    ],
+    general: [
+      'State and local business registration',
+      'Tax identification and filing requirements',
+      'General liability insurance recommended',
+      'Ongoing compliance and annual renewals',
+    ],
+  };
+  return insights[businessType] || insights.general;
+};
+
+const getInspectionFrequencyText = (businessType?: BusinessType): string => {
+  const frequencies: Record<BusinessType, string> = {
+    restaurant: 'Quarterly health inspections',
+    retail: 'Annual safety checks',
+    construction: 'Project-based inspections',
+    healthcare: 'Regular compliance audits',
+    manufacturing: 'Quarterly safety audits',
+    technology: 'Annual security reviews',
+    consulting: 'As-needed compliance',
+    fitness: 'Annual facility inspections',
+    salon: 'Bi-annual health inspections',
+    auto_repair: 'Annual equipment inspections',
+    general: 'Annual compliance reviews',
+  };
+  return frequencies[businessType || 'general'];
+};
+
+const getComplianceScore = (completed: number, total: number): number => {
+  return Math.round((completed / (total || 1)) * 100);
+};
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
@@ -51,17 +145,107 @@ export default function DashboardPage() {
 
         const profile = profileData as Profile | null;
 
-        // Fetch user tasks with task details
-        const { data: userTasksData } = await supabase
-          .from("user_tasks")
-          .select(`
-            *,
-            task:tasks(*)
-          `)
-          .eq("user_id", user.id)
-          .order("task.order", { ascending: true });
+        const fetchUserTasks = async () => {
+          return await supabase
+            .from("user_tasks")
+            .select(
+              `
+              *,
+              task:tasks(*)
+            `
+            )
+            .eq("user_id", user.id)
+            .order("order", { foreignTable: "task", ascending: true });
+        };
 
-        const userTasks = (userTasksData || []) as UserTask[];
+        // Fetch user tasks with task details (auto-assign if missing)
+        let { data: userTasksData } = await fetchUserTasks();
+
+        if ((userTasksData?.length || 0) === 0 && profile?.state && profile?.business_type) {
+          const { data: tasksToAssign, error: tasksToAssignError } = await supabase
+            .from("tasks")
+            .select("id,state,business_type")
+            .or(`state.eq.${profile.state},state.eq.general`)
+            .or(`business_type.eq.${profile.business_type},business_type.eq.general`);
+
+          if (tasksToAssignError) {
+            console.error("Error fetching tasks to assign:", tasksToAssignError);
+          } else if (tasksToAssign && tasksToAssign.length > 0) {
+            const { error: assignError } = await supabase
+              .from("user_tasks")
+              .upsert(
+                tasksToAssign.map((t: { id: string }) => ({
+                  user_id: user.id,
+                  task_id: t.id,
+                  completed: false,
+                })),
+                { onConflict: "user_id,task_id" }
+              );
+
+            if (assignError) {
+              console.error("Error assigning tasks:", assignError);
+            } else {
+              ({ data: userTasksData } = await fetchUserTasks());
+            }
+          }
+        }
+
+        let userTasks = (userTasksData || []) as UserTask[];
+
+        // If the database has no assigned tasks (or tasks table isn't seeded yet),
+        // fall back to showing a generated checklist from the seed endpoint so the dashboard isn't all zeros.
+        if (userTasks.length === 0 && profile?.state && profile?.business_type) {
+          try {
+            const res = await fetch(
+              `/api/tasks?state=${encodeURIComponent(profile.state)}&business_type=${encodeURIComponent(profile.business_type)}`
+            );
+            const json = await res.json();
+            const tasksFromApi = (json?.tasks || []) as any[];
+
+            if (Array.isArray(tasksFromApi) && tasksFromApi.length > 0) {
+              userTasks = tasksFromApi.map((t, idx) => {
+                const tempId = `seed-${profile.state}-${profile.business_type}-${t.category || "task"}-${t.order ?? idx}-${idx}`;
+                return {
+                  id: tempId,
+                  user_id: user.id,
+                  task_id: tempId,
+                  completed: false,
+                  completed_at: null,
+                  task: {
+                    id: tempId,
+                    title: t.title,
+                    description: t.description,
+                    state: t.state,
+                    business_type: t.business_type,
+                    cost_estimate: t.cost_estimate,
+                    timeline_estimate: t.timeline_estimate,
+                    required_documents: t.required_documents || [],
+                    official_link: t.official_link ?? null,
+                    category: t.category,
+                    order: t.order ?? idx,
+                  },
+                } satisfies UserTask;
+              });
+            }
+          } catch (e) {
+            console.error("Error loading fallback tasks:", e);
+          }
+        }
+
+        // Filter tasks to show those relevant for user's state and business type
+        // Accepts tasks that are specifically for user's selections OR marked as general
+        const filteredTasks = userTasks.filter((userTask) => {
+          const task = userTask.task as any;
+          if (!task) return false;
+          
+          // Task matches if it's for the user's state OR it's marked general
+          const stateMatch = task.state === profile?.state || task.state === 'general';
+          
+          // Task matches if it's for the user's business type OR it's marked general
+          const businessTypeMatch = task.business_type === profile?.business_type || task.business_type === 'general';
+          
+          return stateMatch && businessTypeMatch;
+        });
 
         // Fetch licenses
         const { data: licensesData } = await supabase
@@ -97,12 +281,12 @@ export default function DashboardPage() {
 
         setData({
           profile,
-          tasks: userTasks,
+          tasks: filteredTasks,
           licenses,
           inspections,
           stats: {
-            totalTasks: userTasks.length,
-            completedTasks: userTasks.filter((task) => task.completed).length,
+            totalTasks: filteredTasks.length,
+            completedTasks: filteredTasks.filter((task) => task.completed).length,
             upcomingDeadlines: upcomingLicenses.length,
             complianceAlerts: upcomingLicenses.length + upcomingInspectionList.length,
           },
@@ -147,14 +331,30 @@ export default function DashboardPage() {
 
   return (
     <div className="p-8">
-      {/* Header */}
+      {/* Header with Personalization */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-900">
           Welcome back, {profile?.name || "Entrepreneur"}!
         </h1>
         <p className="text-slate-600 mt-2">
-          Running a {profile?.business_type || "business"} in {profile?.city}, {profile?.state}
+          Your {profile?.business_type?.replace('_', ' ') || "business"} setup roadmap for {profile?.city}, {profile?.state}
         </p>
+      </div>
+
+      {/* Business Type Info Banner */}
+      <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-start gap-3">
+          <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+            <span className="text-sm font-bold text-blue-600">i</span>
+          </div>
+          <div>
+            <h3 className="font-semibold text-blue-900">Customized for Your Business</h3>
+            <p className="text-sm text-blue-800 mt-1">
+              Your roadmap is tailored for a {profile?.business_type?.replace('_', ' ')} business in {profile?.state}. 
+              We&apos;ve filtered requirements and tasks specific to your industry and location.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -162,28 +362,45 @@ export default function DashboardPage() {
         <StatsCard
           title="Tasks Completed"
           value={`${stats?.completedTasks || 0}/${stats?.totalTasks || 0}`}
-          description="Business setup tasks"
+          description={`${Math.round(((stats?.completedTasks || 0) / (stats?.totalTasks || 1)) * 100)}% setup complete`}
           icon={<ListChecks className="h-5 w-5" />}
         />
         <StatsCard
           title="Licenses"
           value={licenses?.length || 0}
-          description="Active licenses"
+          description={`Active in ${profile?.state}`}
           icon={<Shield className="h-5 w-5" />}
         />
         <StatsCard
           title="Inspections"
           value={inspections?.length || 0}
-          description="Tracked inspections"
+          description={`${getInspectionFrequencyText(profile?.business_type)} scheduled`}
           icon={<ClipboardCheck className="h-5 w-5" />}
         />
         <StatsCard
-          title="Alerts"
-          value={stats?.complianceAlerts || 0}
-          description="Due within 30 days"
+          title="Compliance Score"
+          value={`${getComplianceScore(stats?.completedTasks || 0, stats?.totalTasks || 1)}%`}
+          description={`${stats?.complianceAlerts || 0} deadlines ahead`}
           icon={<AlertTriangle className="h-5 w-5" />}
         />
       </div>
+
+      {/* Business Type Specific Insights */}
+      {profile && (
+        <div className="mb-8 p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg border border-slate-200">
+          <h3 className="font-semibold text-slate-900 mb-3">
+            Industry Insights for {profile.business_type.replace('_', ' ')} Businesses
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {getBusinessTypeInsights(profile.business_type).map((insight, idx) => (
+              <div key={idx} className="flex gap-3">
+                <span className="text-lg">✓</span>
+                <p className="text-sm text-slate-700">{insight}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Progress & Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -255,17 +472,17 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Upcoming Tasks */}
+      {/* Upcoming Tasks - Customized for Business Type & State */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-slate-900">
-            Next Steps
+            Your Customized Roadmap
           </h2>
           <Link
             href="/roadmap"
             className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
           >
-            View all <ArrowRight className="h-4 w-4" />
+            View all steps <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
 
@@ -286,6 +503,11 @@ export default function DashboardPage() {
                   <p className="text-sm text-slate-500">
                     {userTask.task?.description?.substring(0, 80)}...
                   </p>
+                  {userTask.task?.timeline_estimate && (
+                    <p className="text-xs text-slate-400 mt-1">
+                      ⏱️ {userTask.task?.timeline_estimate}
+                    </p>
+                  )}
                 </div>
                 <Link href="/roadmap">
                   <button className="px-4 py-2 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary hover:text-white transition-colors">
@@ -302,7 +524,7 @@ export default function DashboardPage() {
               Set Up Your Business
             </h3>
             <p className="text-slate-500 mt-2">
-              Complete the onboarding to get your personalized task list
+              Complete the onboarding to get your personalized task list based on your business type and state
             </p>
             <a
               href="/onboarding"

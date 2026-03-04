@@ -1,4 +1,4 @@
-// Database types for LaunchNavigator
+// Database types for BizMap
 
 export type SubscriptionPlan = 'free' | 'pro';
 

@@ -6,96 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { createClient } from "@/lib/supabase";
-import { US_STATES, BUSINESS_TYPES } from "@/types";
-import { seedTasks } from "@/data/seed-tasks";
+import { US_STATES, BUSINESS_TYPES, type BusinessType } from "@/types";
 import { Rocket, ArrowRight, Check, Building2, MapPin, Briefcase, Info } from "lucide-react";
-
-const DEMO_TASKS = [
-  {
-    id: "demo-1",
-    title: "Get an Employer Identification Number (EIN)",
-    description: "Apply for a federal tax ID number from the IRS. This is like your business's Social Security number.",
-    detailed_steps: ["Go to IRS website", "Click Apply Online Now", "Fill out the application", "Get your EIN instantly"],
-    cost_estimate: "Free",
-    cost_details: "The IRS does not charge for EIN applications",
-    timeline_estimate: "Immediate",
-    timeline_details: "You get your EIN instantly when applying online",
-    required_documents: ["Social Security Number (SSN)", "Business name", "Business address"],
-    official_link: "https://www.irs.gov/ein",
-    category: "tax",
-    order: 1,
-  },
-  {
-    id: "demo-2",
-    title: "Choose a Business Structure",
-    description: "Decide what type of business entity you want to form - Sole Proprietorship, LLC, Corporation, or Partnership.",
-    detailed_steps: ["Sole Proprietorship: Simplest form", "LLC: Protects your personal assets", "Corporation: For larger businesses", "Consult with an attorney if unsure"],
-    cost_estimate: "$50 - $800",
-    cost_details: "Costs vary by state",
-    timeline_estimate: "1-4 weeks",
-    timeline_details: "Sole Prop is immediate, LLCs take 1-4 weeks",
-    required_documents: ["Business name", "Owner information"],
-    official_link: null,
-    category: "legal",
-    order: 2,
-  },
-  {
-    id: "demo-3",
-    title: "Register Your Business Name",
-    description: "Register your business name with your state to operate legally.",
-    detailed_steps: ["Choose a business name", "File a DBA (Doing Business As)", "Visit county clerk or state website", "Pay the filing fee"],
-    cost_estimate: "$25 - $100",
-    cost_details: "County filing fees vary",
-    timeline_estimate: "1-3 weeks",
-    timeline_details: "Processing takes 1-2 weeks",
-    required_documents: ["Business name", "Owner name and address", "Nature of business"],
-    official_link: null,
-    category: "registration",
-    order: 3,
-  },
-  {
-    id: "demo-4",
-    title: "Open a Business Bank Account",
-    description: "Open a separate bank account for your business to keep finances separate.",
-    detailed_steps: ["Bring EIN letter to bank", "Bring business formation documents", "Bring your ID", "Choose a business checking account"],
-    cost_estimate: "$0 - $30",
-    cost_details: "Many banks offer free business checking",
-    timeline_estimate: "1-2 days",
-    timeline_details: "Can open online or in branch",
-    required_documents: ["EIN letter", "Business formation documents", "ID"],
-    official_link: null,
-    category: "operations",
-    order: 4,
-  },
-  {
-    id: "demo-5",
-    title: "Get Business Insurance",
-    description: "Protect your business with the right insurance coverage.",
-    detailed_steps: ["Get General Liability Insurance", "Consider Professional Liability", "Get Workers Compensation if needed", "Get quotes from multiple companies"],
-    cost_estimate: "$500 - $3,000/year",
-    cost_details: "Varies by business type and size",
-    timeline_estimate: "1-2 weeks",
-    timeline_details: "Can get quotes same day",
-    required_documents: ["Business information", "Estimated revenue", "Number of employees"],
-    official_link: null,
-    category: "insurance",
-    order: 5,
-  },
-  {
-    id: "demo-6",
-    title: "Set Up Accounting System",
-    description: "Create a system to track your income, expenses, and taxes.",
-    detailed_steps: ["Choose accounting software", "Set up your business", "Connect bank account", "Track income and expenses", "Set aside money for taxes"],
-    cost_estimate: "$0 - $50/month",
-    cost_details: "Wave is free, QuickBooks starts at $25/month",
-    timeline_estimate: "1-3 days",
-    timeline_details: "Can set up in a few hours",
-    required_documents: ["Bank statements", "Receipts"],
-    official_link: null,
-    category: "operations",
-    order: 6,
-  },
-];
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -106,7 +18,7 @@ export default function OnboardingPage() {
   const [name, setName] = useState("");
   const [selectedState, setSelectedState] = useState("");
   const [city, setCity] = useState("");
-  const [businessType, setBusinessType] = useState("");
+  const [businessType, setBusinessType] = useState<BusinessType | "">("");
   const supabase = createClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -132,33 +44,49 @@ export default function OnboardingPage() {
         updated_at: new Date().toISOString(),
       });
 
-      // Use demo tasks - insert directly into user_tasks
-      for (const task of DEMO_TASKS) {
-        // Insert task into tasks table first
-        await supabase.from("tasks").upsert({
-          id: task.id,
-          title: task.title,
-          description: task.description,
-          detailed_steps: task.detailed_steps,
-          state: "general",
-          business_type: "general",
-          cost_estimate: task.cost_estimate,
-          cost_details: task.cost_details,
-          timeline_estimate: task.timeline_estimate,
-          timeline_details: task.timeline_details,
-          required_documents: task.required_documents,
-          official_link: task.official_link,
-          category: task.category,
-          order: task.order,
-        }, { onConflict: "id" });
+      const fetchRelevantTaskIds = async (): Promise<string[]> => {
+        const { data: tasksData, error: tasksError } = await supabase
+          .from("tasks")
+          .select("id,state,business_type")
+          .or(`state.eq.${selectedState},state.eq.general`)
+          .or(`business_type.eq.${businessType},business_type.eq.general`);
 
-        // Then create user task
-        await supabase.from("user_tasks").insert({
-          id: crypto.randomUUID(),
+        if (tasksError) {
+          throw new Error(tasksError.message);
+        }
+
+        return (tasksData || []).map((t: any) => t.id).filter(Boolean);
+      };
+
+      // Assign tasks from the DB. If the DB is empty (common in dev), try seeding once via /api/tasks.
+      let taskIds = await fetchRelevantTaskIds();
+      if (taskIds.length === 0) {
+        try {
+          await fetch("/api/tasks", { method: "POST" });
+        } catch {
+          // ignore; we'll error if still empty below
+        }
+        taskIds = await fetchRelevantTaskIds();
+      }
+
+      // Don't block onboarding if tasks table isn't seeded yet.
+      // The dashboard has a fallback that still shows a customized checklist.
+      if (taskIds.length > 0) {
+        const userTasksToUpsert = taskIds.map((taskId) => ({
           user_id: user.id,
-          task_id: task.id,
+          task_id: taskId,
           completed: false,
-        });
+        }));
+
+        const { error: userTasksError } = await supabase
+          .from("user_tasks")
+          .upsert(userTasksToUpsert, { onConflict: "user_id,task_id" });
+
+        if (userTasksError) {
+          console.error("Error assigning tasks:", userTasksError);
+        }
+      } else {
+        console.warn("No tasks available to assign yet; continuing to dashboard.");
       }
 
       router.push("/dashboard");
@@ -184,7 +112,7 @@ export default function OnboardingPage() {
             <div className="h-12 w-12 bg-primary rounded-xl flex items-center justify-center">
               <Rocket className="h-7 w-7 text-white" />
             </div>
-            <span className="text-2xl font-bold text-slate-900">LaunchNavigator</span>
+            <span className="text-2xl font-bold text-slate-900">BizMap</span>
           </div>
           <p className="text-slate-600">Let&apos;s set up your business - we&apos;ll create a personalized checklist just for you!</p>
         </div>
@@ -233,7 +161,7 @@ export default function OnboardingPage() {
                   <Label htmlFor="state" className="text-base font-medium"> State</Label>
                   <select id="state" value={selectedState} onChange={(e) => setSelectedState(e.target.value)} className="flex h-12 mt-2 w-full rounded-lg border border-input bg-background px-4 py-2 text-lg">
                     <option value="">Select your state</option>
-                    {US_STATES.map((s) => (<option key={s.code} value={s.name}>{s.name}</option>))}
+                    {US_STATES.map((s) => (<option key={s.code} value={s.code}>{s.name}</option>))}
                   </select>
                 </div>
                 <div>
@@ -254,7 +182,12 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <Label htmlFor="businessType" className="text-base font-medium">Business Type</Label>
-                  <select id="businessType" value={businessType} onChange={(e) => setBusinessType(e.target.value)} className="flex h-12 mt-2 w-full rounded-lg border border-input bg-background px-4 py-2 text-lg">
+                  <select
+                    id="businessType"
+                    value={businessType}
+                    onChange={(e) => setBusinessType(e.target.value as BusinessType | "")}
+                    className="flex h-12 mt-2 w-full rounded-lg border border-input bg-background px-4 py-2 text-lg"
+                  >
                     <option value="">Select business type</option>
                     {BUSINESS_TYPES.map((bt) => (<option key={bt.value} value={bt.value}>{bt.label}</option>))}
                   </select>

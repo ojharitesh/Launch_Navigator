@@ -57,7 +57,7 @@ export default function LoginPage() {
                 />
               </svg>
             </div>
-            <span className="text-2xl font-bold text-slate-900">LaunchNavigator</span>
+            <span className="text-2xl font-bold text-slate-900">BizMap</span>
           </Link>
           <h1 className="text-2xl font-bold text-slate-900">Welcome back</h1>
           <p className="text-slate-600 mt-2">Sign in to your account</p>

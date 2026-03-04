@@ -52,17 +52,41 @@ export async function GET(request: Request) {
 // Seed tasks endpoint (for development)
 export async function POST() {
   try {
+    if (process.env.NODE_ENV === "production") {
+      return NextResponse.json({ error: "Not available in production" }, { status: 403 });
+    }
+
     const supabase = await createClient();
 
-    // Insert seed tasks
+    // If tasks already exist, don't duplicate them
+    const { count, error: countError } = await supabase
+      .from("tasks")
+      .select("id", { count: "exact", head: true });
+
+    if (countError) {
+      console.error("Error checking existing tasks:", countError);
+      return NextResponse.json({ error: countError.message }, { status: 500 });
+    }
+
+    if ((count || 0) > 0) {
+      return NextResponse.json({ message: "Tasks already seeded", count });
+    }
+
+    // Insert seed tasks (map seed shape -> DB shape)
     const tasksToInsert = seedTasks.map((task) => ({
-      ...task,
-      id: crypto.randomUUID(),
+      title: task.title,
+      description: task.description,
+      state: task.state,
+      business_type: task.business_type,
+      cost_estimate: task.cost_estimate,
+      timeline_estimate: task.timeline_estimate,
+      required_documents: task.required_documents,
+      official_link: task.official_link,
+      category: task.category,
+      order: task.order,
     }));
 
-    const { error } = await supabase.from("tasks").upsert(tasksToInsert, {
-      onConflict: "id",
-    });
+    const { error } = await supabase.from("tasks").insert(tasksToInsert);
 
     if (error) {
       console.error("Error seeding tasks:", error);

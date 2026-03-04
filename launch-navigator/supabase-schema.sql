@@ -1,4 +1,4 @@
--- LaunchNavigator Database Schema
+-- BizMap Database Schema
 -- Run this SQL in your Supabase SQL Editor to set up the database
 
 -- Enable UUID extension
@@ -63,12 +63,24 @@ CREATE TABLE IF NOT EXISTS inspections (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Create contact_messages table
+CREATE TABLE IF NOT EXISTS contact_messages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Enable Row Level Security (RLS)
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_tasks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE licenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE inspections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
 
 -- Enforce RLS even for table owners
 ALTER TABLE profiles FORCE ROW LEVEL SECURITY;
@@ -76,6 +88,7 @@ ALTER TABLE tasks FORCE ROW LEVEL SECURITY;
 ALTER TABLE user_tasks FORCE ROW LEVEL SECURITY;
 ALTER TABLE licenses FORCE ROW LEVEL SECURITY;
 ALTER TABLE inspections FORCE ROW LEVEL SECURITY;
+ALTER TABLE contact_messages FORCE ROW LEVEL SECURITY;
 
 -- Least-privilege grants for API roles
 REVOKE ALL ON TABLE profiles FROM anon, authenticated;
@@ -83,69 +96,97 @@ REVOKE ALL ON TABLE tasks FROM anon, authenticated;
 REVOKE ALL ON TABLE user_tasks FROM anon, authenticated;
 REVOKE ALL ON TABLE licenses FROM anon, authenticated;
 REVOKE ALL ON TABLE inspections FROM anon, authenticated;
+REVOKE ALL ON TABLE contact_messages FROM anon, authenticated;
 
 GRANT SELECT, INSERT, UPDATE ON TABLE profiles TO authenticated;
 GRANT SELECT ON TABLE tasks TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE user_tasks TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE licenses TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE inspections TO authenticated;
+GRANT INSERT, SELECT ON TABLE contact_messages TO authenticated;
 
 -- Profiles policies
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
 CREATE POLICY "Users can view own profile" ON profiles
     FOR SELECT USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 CREATE POLICY "Users can update own profile" ON profiles
     FOR UPDATE USING (auth.uid() = id)
     WITH CHECK (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
 CREATE POLICY "Users can insert own profile" ON profiles
     FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- Tasks policies (read-only for authenticated users)
+DROP POLICY IF EXISTS "Authenticated users can view tasks" ON tasks;
 CREATE POLICY "Authenticated users can view tasks" ON tasks
     FOR SELECT TO authenticated USING (true);
 
 -- User tasks policies
+DROP POLICY IF EXISTS "Users can view own user_tasks" ON user_tasks;
 CREATE POLICY "Users can view own user_tasks" ON user_tasks
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own user_tasks" ON user_tasks;
 CREATE POLICY "Users can insert own user_tasks" ON user_tasks
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own user_tasks" ON user_tasks;
 CREATE POLICY "Users can update own user_tasks" ON user_tasks
     FOR UPDATE USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own user_tasks" ON user_tasks;
 CREATE POLICY "Users can delete own user_tasks" ON user_tasks
     FOR DELETE USING (auth.uid() = user_id);
 
 -- Licenses policies
+DROP POLICY IF EXISTS "Users can view own licenses" ON licenses;
 CREATE POLICY "Users can view own licenses" ON licenses
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own licenses" ON licenses;
 CREATE POLICY "Users can insert own licenses" ON licenses
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own licenses" ON licenses;
 CREATE POLICY "Users can update own licenses" ON licenses
     FOR UPDATE USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own licenses" ON licenses;
 CREATE POLICY "Users can delete own licenses" ON licenses
     FOR DELETE USING (auth.uid() = user_id);
 
 -- Inspections policies
+DROP POLICY IF EXISTS "Users can view own inspections" ON inspections;
 CREATE POLICY "Users can view own inspections" ON inspections
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own inspections" ON inspections;
 CREATE POLICY "Users can insert own inspections" ON inspections
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own inspections" ON inspections;
 CREATE POLICY "Users can update own inspections" ON inspections
     FOR UPDATE USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own inspections" ON inspections;
 CREATE POLICY "Users can delete own inspections" ON inspections
     FOR DELETE USING (auth.uid() = user_id);
+
+-- Contact messages policies
+DROP POLICY IF EXISTS "Users can insert contact messages" ON contact_messages;
+CREATE POLICY "Users can insert contact messages" ON contact_messages
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Users can view own contact messages" ON contact_messages;
+CREATE POLICY "Users can view own contact messages" ON contact_messages
+    FOR SELECT USING (auth.uid() = user_id);
+
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_user_tasks_user_id ON user_tasks(user_id);
