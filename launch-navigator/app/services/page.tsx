@@ -1,8 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { Button } from "@/components/ui/Button";
+import { PageHero } from "@/components/ui/PageHero";
+import { AnimatedSection } from "@/components/ui/AnimatedSection";
+import { motion } from "framer-motion";
 import {
   FileText,
   Shield,
@@ -19,16 +23,19 @@ const services = [
     icon: FileText,
     title: "Compliance Management",
     description: "Stay ahead of regulatory requirements with automated tracking and deadline alerts.",
+    gradient: "from-cyan-500/20 to-blue-500/20",
   },
   {
     icon: Shield,
     title: "Business Planning",
     description: "Structured guidance for business formation, licensing, and market entry.",
+    gradient: "from-orange-500/20 to-amber-500/20",
   },
   {
     icon: BarChart3,
     title: "Performance Analytics",
     description: "Track progress and optimize your operational strategy with real-time insights.",
+    gradient: "from-cyan-500/20 to-teal-500/20",
   },
 ];
 
@@ -39,111 +46,140 @@ const features = [
   "Performance analytics",
 ];
 
+const capabilities = [
+  { icon: CalendarCheck, title: "Deadline Management", desc: "Never miss a filing or renewal date." },
+  { icon: Gauge, title: "Progress Tracking", desc: "Visual roadmaps for every launch phase." },
+  { icon: Briefcase, title: "Document Storage", desc: "Organized, secure, and always accessible." },
+];
+
 export default function ServicesPage() {
   return (
-    <div className="min-h-screen bg-white text-foreground">
+    <div className="min-h-screen bg-black text-white">
       <Header />
 
-      <section className="py-20 lg:py-32 bg-gradient-to-b from-amber-50/40 to-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-primary/70">
-            What We Offer
-          </p>
-          <h1 className="text-5xl lg:text-6xl font-bold text-text-dark leading-tight max-w-3xl">
-            Built for modern business leaders.
-          </h1>
-          <p className="mt-6 text-lg text-text-secondary max-w-2xl">
-            Whether you&apos;re launching a new venture, managing compliance, or scaling operations, BizMap provides the strategic framework and operational tools you need.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        badge="What We Offer"
+        titleAccent="Built for modern"
+        title="business leaders."
+        description="Whether you're launching a new venture, managing compliance, or scaling operations, BizMap provides the strategic framework and operational tools you need."
+      />
 
-      <section className="py-20 lg:py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-text-dark mb-16">Our Services</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {services.map((item) => (
-              <div
-                key={item.title}
-                className="rounded-2xl border border-border bg-white p-8 shadow-sm hover:shadow-lg transition-shadow"
-              >
-                <div className="mb-6 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-amber-100">
-                  <item.icon className="h-6 w-6 text-primary" />
+      {/* Services Grid */}
+      <section className="py-24 lg:py-32 bg-zinc-950 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <AnimatedSection className="mb-16">
+            <p className="text-xs font-semibold uppercase tracking-widest text-cyan-400 mb-4">Our Services</p>
+            <h2 className="text-4xl font-bold text-white">Core Offerings</h2>
+          </AnimatedSection>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {services.map((item, i) => (
+              <AnimatedSection key={item.title} delay={i * 0.1}>
+                <div className="group rounded-2xl p-8 bg-white/5 border border-white/10 backdrop-blur-sm hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-300 h-full">
+                  <div className={`mb-6 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} border border-white/10`}>
+                    <item.icon className="h-6 w-6 text-cyan-400" />
+                  </div>
+                  <h3 className="text-2xl font-semibold text-white mb-3">{item.title}</h3>
+                  <p className="text-white/50 leading-relaxed">{item.description}</p>
                 </div>
-                <h3 className="text-2xl font-semibold text-text-dark">{item.title}</h3>
-                <p className="mt-4 text-text-secondary leading-relaxed">{item.description}</p>
-              </div>
+              </AnimatedSection>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-20 lg:py-32 bg-secondary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-12 gap-8 lg:gap-12 items-center">
-            <div className="col-span-12 lg:col-span-6">
-              <h2 className="text-4xl font-bold text-text-dark">
+      {/* Features Section */}
+      <section className="py-24 lg:py-32 bg-black relative overflow-hidden">
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-orange-500/5 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <AnimatedSection direction="left">
+              <p className="text-xs font-semibold uppercase tracking-widest text-cyan-400 mb-4">Features</p>
+              <h2 className="text-4xl font-bold text-white mb-6">
                 Everything you need to launch and scale.
               </h2>
-              <p className="mt-6 text-lg text-text-secondary leading-relaxed">
+              <p className="text-lg text-white/60 leading-relaxed mb-8">
                 From formation to compliance to growth—we&apos;ve got you covered with tools designed for real-world business challenges.
               </p>
-              <ul className="mt-8 space-y-4">
-                {features.map((item) => (
-                  <li key={item} className="flex items-start gap-3">
-                    <CircleCheckBig className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                    <span className="text-text-secondary">{item}</span>
-                  </li>
+              <ul className="space-y-4">
+                {features.map((item, i) => (
+                  <motion.li
+                    key={item}
+                    className="flex items-center gap-3"
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1, duration: 0.5 }}
+                  >
+                    <CircleCheckBig className="h-5 w-5 shrink-0 text-cyan-400" />
+                    <span className="text-white/70">{item}</span>
+                  </motion.li>
                 ))}
               </ul>
-            </div>
-            <div className="col-span-12 lg:col-span-6">
-              <div className="rounded-2xl overflow-hidden shadow-lg h-80 relative">
+            </AnimatedSection>
+
+            <AnimatedSection direction="right">
+              <div className="rounded-2xl overflow-hidden border border-white/10 h-80 relative">
                 <Image
                   src="/images/business-owner.jpg"
                   alt="Business owner ready to launch"
                   fill
                   className="object-cover"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
               </div>
-            </div>
+            </AnimatedSection>
           </div>
         </div>
       </section>
 
-      <section className="py-20 lg:py-32 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-text-dark text-center mb-16">Additional Capabilities</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { icon: CalendarCheck, title: "Deadline Management", desc: "Never miss a filing or renewal date." },
-              { icon: Gauge, title: "Progress Tracking", desc: "Visual roadmaps for every launch phase." },
-              { icon: Briefcase, title: "Document Storage", desc: "Organized, secure, and always accessible." },
-            ].map((item) => (
-              <div key={item.title} className="text-center p-6 rounded-xl bg-secondary/50">
-                <item.icon className="h-10 w-10 text-primary mx-auto mb-4" />
-                <h3 className="font-semibold text-text-dark">{item.title}</h3>
-                <p className="mt-2 text-sm text-text-secondary">{item.desc}</p>
-              </div>
+      {/* Additional Capabilities */}
+      <section className="py-24 lg:py-32 bg-zinc-950 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-3xl" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <AnimatedSection className="text-center mb-16">
+            <p className="text-xs font-semibold uppercase tracking-widest text-cyan-400 mb-4">More Tools</p>
+            <h2 className="text-4xl font-bold text-white">Additional Capabilities</h2>
+          </AnimatedSection>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {capabilities.map((item, i) => (
+              <AnimatedSection key={item.title} delay={i * 0.1}>
+                <div className="text-center p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-300">
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500/20 to-orange-500/20 border border-white/10 mb-5">
+                    <item.icon className="h-6 w-6 text-cyan-400" />
+                  </div>
+                  <h3 className="font-semibold text-white text-lg mb-2">{item.title}</h3>
+                  <p className="text-sm text-white/50">{item.desc}</p>
+                </div>
+              </AnimatedSection>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-20 lg:py-32 bg-secondary">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold text-text-dark">Ready to streamline your operations?</h2>
-          <p className="mt-6 text-lg text-text-secondary">
+      {/* CTA */}
+      <section className="py-24 lg:py-32 bg-black relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-transparent to-orange-500/5" />
+        <AnimatedSection className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
+          <h2 className="text-4xl font-bold text-white mb-6">Ready to streamline your operations?</h2>
+          <p className="text-lg text-white/50 mb-10">
             Get started with BizMap and take control of your business strategy.
           </p>
-          <div className="mt-10">
-            <Link href="/signup">
-              <Button size="lg" className="bg-accent text-accent-foreground font-semibold hover:bg-accent/90 rounded-full px-8">
-                Get Started Free <ArrowRight className="h-4 w-4 inline ml-2" />
-              </Button>
-            </Link>
-          </div>
-        </div>
+          <Link href="/signup">
+            <motion.button
+              className="px-10 py-4 rounded-full bg-gradient-to-r from-cyan-500 to-orange-500 text-white font-semibold text-sm transition-all duration-300 hover:from-cyan-400 hover:to-orange-400 cursor-pointer shadow-lg hover:shadow-xl"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Get Started Free <ArrowRight className="h-4 w-4 inline ml-2" />
+            </motion.button>
+          </Link>
+        </AnimatedSection>
       </section>
 
       <Footer />

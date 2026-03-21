@@ -38,17 +38,17 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-text-secondary">Loading...</p>
+          <div className="h-8 w-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-white/50 text-sm">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex bg-secondary">
+    <div className="min-h-screen flex bg-black">
       <Sidebar />
       <main className="flex-1 overflow-auto ml-0 md:ml-72">{children}</main>
     </div>

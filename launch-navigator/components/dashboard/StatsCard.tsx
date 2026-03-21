@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 
 interface StatsCardProps {
@@ -22,30 +21,25 @@ export function StatsCard({
   className,
 }: StatsCardProps) {
   return (
-    <Card className={cn("", className)}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-slate-600">
-          {title}
-        </CardTitle>
-        {icon && <div className="text-slate-400">{icon}</div>}
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-bold text-slate-900">{value}</div>
-        {description && (
-          <p className="text-sm text-slate-500 mt-1">{description}</p>
-        )}
-        {trend && (
-          <p
-            className={cn(
-              "text-sm mt-1",
-              trend.isPositive ? "text-green-600" : "text-red-600"
-            )}
-          >
-            {trend.isPositive ? "↑" : "↓"} {Math.abs(trend.value)}% from last
-            month
-          </p>
-        )}
-      </CardContent>
-    </Card>
+    <div className={cn("rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm p-6 hover:border-white/20 transition-colors", className)}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm font-medium text-white/50">{title}</span>
+        {icon && <div className="text-cyan-400/60">{icon}</div>}
+      </div>
+      <div className="text-3xl font-bold text-white">{value}</div>
+      {description && (
+        <p className="text-sm text-white/40 mt-1">{description}</p>
+      )}
+      {trend && (
+        <p
+          className={cn(
+            "text-sm mt-1",
+            trend.isPositive ? "text-emerald-400" : "text-red-400"
+          )}
+        >
+          {trend.isPositive ? "↑" : "↓"} {Math.abs(trend.value)}% from last month
+        </p>
+      )}
+    </div>
   );
 }

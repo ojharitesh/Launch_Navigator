@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
+import { MeshGradient } from "@paper-design/shaders-react";
+import { motion } from "framer-motion";
+import { Rocket } from "lucide-react";
 import { createClient } from "@/lib/supabase";
 
 export default function LoginPage() {
@@ -38,113 +39,148 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50/40 to-white flex items-center justify-center px-4 py-12">
-      <div className="grid w-full max-w-5xl grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        {/* Left: Brand + copy (hidden on very small screens) */}
-        <div className="hidden lg:block">
-          <Link href="/" className="inline-flex items-center gap-2 mb-8">
-            <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
-              <span className="text-white text-lg font-bold">B</span>
-            </div>
-            <span className="text-2xl font-bold text-primary">BizMap</span>
-          </Link>
-          <h1 className="text-4xl lg:text-5xl font-bold text-text-dark leading-tight">
-            Welcome back to your<br />business command center.
-          </h1>
-          <p className="mt-6 text-lg text-text-secondary max-w-md">
-            Sign in to continue managing your compliance roadmap, licenses, and inspections—all in one place.
-          </p>
+    <div className="min-h-screen bg-black flex relative overflow-hidden">
+      {/* Background gradient */}
+      <div className="absolute inset-0 opacity-30">
+        <MeshGradient
+          className="absolute inset-0 w-full h-full"
+          colors={["#000000", "#06b6d4", "#0891b2", "#164e63", "#f97316"]}
+          speed={0.2}
+        />
+      </div>
+
+      {/* Left panel — branding (desktop) */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 relative z-10">
+        <Link href="/" className="flex items-center gap-2 group">
+          <motion.div
+            className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-500/20 to-orange-500/20 border border-white/10 flex items-center justify-center"
+            whileHover={{ rotate: [0, -8, 8, 0], transition: { duration: 0.6 } }}
+          >
+            <Rocket className="size-5 text-cyan-400" />
+          </motion.div>
+          <span className="text-lg font-bold text-white">BizMap</span>
+        </Link>
+
+        <div>
+          <motion.h1
+            className="text-4xl lg:text-5xl font-bold text-white leading-tight"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            Welcome back to your{" "}
+            <span className="bg-gradient-to-r from-cyan-400 to-orange-400 bg-clip-text text-transparent">
+              command center
+            </span>
+            .
+          </motion.h1>
+          <motion.p
+            className="mt-4 text-lg text-white/50 max-w-md"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            Sign in to manage your compliance roadmap, licenses, and inspections—all in one place.
+          </motion.p>
         </div>
 
-        {/* Right: Auth card */}
-        <div className="w-full max-w-md mx-auto">
-          <div className="flex items-center justify-between mb-6 lg:hidden">
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center">
-                <span className="text-white text-sm font-bold">B</span>
+        <div className="flex items-center gap-4">
+          <div className="relative w-10 h-10 rounded-full overflow-hidden border border-white/10">
+            <Image src="/images/professional.jpg" alt="" fill className="object-cover" />
+          </div>
+          <div>
+            <p className="text-sm text-white/70">&ldquo;BizMap made launching my business effortless.&rdquo;</p>
+            <p className="text-xs text-white/30 mt-0.5">— Sarah Chen, Founder</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right panel — auth form */}
+      <div className="flex flex-1 items-center justify-center p-6 relative z-10">
+        <motion.div
+          className="w-full max-w-md"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+        >
+          {/* Mobile logo */}
+          <div className="flex items-center justify-between mb-8 lg:hidden">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-cyan-500/20 to-orange-500/20 border border-white/10 flex items-center justify-center">
+                <Rocket className="size-4 text-cyan-400" />
               </div>
-              <span className="text-lg font-bold text-primary">BizMap</span>
-            </div>
-            <Link href="/">
-              <Button
-                variant="ghost"
-                className="text-text-secondary hover:text-primary px-3 py-1 rounded-full border border-border/60 bg-white/60"
-              >
-                Back to home
-              </Button>
+              <span className="text-lg font-bold text-white">BizMap</span>
+            </Link>
+            <Link
+              href="/"
+              className="text-xs text-white/40 hover:text-white/70 transition px-3 py-1.5 rounded-full border border-white/10"
+            >
+              Back to home
             </Link>
           </div>
 
-          <div className="bg-white rounded-2xl border border-border p-8 shadow-sm">
+          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-8">
             <div className="mb-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-semibold text-text-dark">Sign in</h2>
-                  <p className="text-sm text-text-secondary mt-1">
-                    Access your BizMap dashboard.
-                  </p>
-                </div>
-                <Link href="/">
-                  <Button
-                    variant="outline"
-                    className="hidden lg:inline-flex text-xs rounded-full px-4 py-1 border-border"
-                  >
-                    Back to home
-                  </Button>
-                </Link>
-              </div>
+              <h2 className="text-2xl font-semibold text-white">Sign in</h2>
+              <p className="text-sm text-white/40 mt-1">Access your BizMap dashboard.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">
+              {error && (
+                <div className="bg-red-500/10 text-red-400 p-3 rounded-xl text-sm border border-red-500/20">
                   {error}
                 </div>
               )}
 
               <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
+                <label htmlFor="email" className="block text-sm font-medium text-white/70 mb-2">
+                  Email
+                </label>
+                <input
                   id="email"
                   type="email"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="mt-1"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
                 />
               </div>
 
               <div>
-                <Label htmlFor="password">Password</Label>
-                <Input
+                <label htmlFor="password" className="block text-sm font-medium text-white/70 mb-2">
+                  Password
+                </label>
+                <input
                   id="password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="mt-1"
+                  className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
                 />
               </div>
 
-              <Button
+              <motion.button
                 type="submit"
-                className="w-full bg-accent text-accent-foreground font-semibold hover:bg-accent/90 rounded-full h-11"
                 disabled={loading}
+                className="w-full py-3 rounded-full bg-gradient-to-r from-cyan-500 to-orange-500 text-white font-semibold text-sm transition-all duration-300 hover:from-cyan-400 hover:to-orange-400 cursor-pointer shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                whileHover={{ scale: loading ? 1 : 1.02 }}
+                whileTap={{ scale: loading ? 1 : 0.98 }}
               >
                 {loading ? "Signing in..." : "Sign in"}
-              </Button>
+              </motion.button>
             </form>
 
             <div className="mt-6 text-center text-sm">
-              <span className="text-text-secondary">Don&apos;t have an account? </span>
-              <Link href="/signup" className="text-primary font-medium hover:underline">
+              <span className="text-white/40">Don&apos;t have an account? </span>
+              <Link href="/signup" className="text-cyan-400 font-medium hover:text-cyan-300 transition">
                 Sign up
               </Link>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { ProgressCard } from "@/components/dashboard/ProgressCard";
 import { AlertCard } from "@/components/dashboard/AlertCard";
@@ -305,8 +304,8 @@ export default function DashboardPage() {
     return (
       <div className="p-8 flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-600">Loading dashboard...</p>
+          <div className="h-8 w-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-white/50">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -333,23 +332,23 @@ export default function DashboardPage() {
     <div className="p-8">
       {/* Header with Personalization */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">
+        <h1 className="text-3xl font-bold text-white">
           Welcome back, {profile?.name || "Entrepreneur"}!
         </h1>
-        <p className="text-slate-600 mt-2">
+        <p className="text-white/50 mt-2">
           Your {profile?.business_type?.replace('_', ' ') || "business"} setup roadmap for {profile?.city}, {profile?.state}
         </p>
       </div>
 
       {/* Business Type Info Banner */}
-      <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="mb-8 p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl">
         <div className="flex items-start gap-3">
-          <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-            <span className="text-sm font-bold text-blue-600">i</span>
+          <div className="h-8 w-8 rounded-xl bg-cyan-500/20 border border-cyan-500/20 flex items-center justify-center flex-shrink-0">
+            <span className="text-sm font-bold text-cyan-400">i</span>
           </div>
           <div>
-            <h3 className="font-semibold text-blue-900">Customized for Your Business</h3>
-            <p className="text-sm text-blue-800 mt-1">
+            <h3 className="font-semibold text-white">Customized for Your Business</h3>
+            <p className="text-sm text-white/50 mt-1">
               Your roadmap is tailored for a {profile?.business_type?.replace('_', ' ')} business in {profile?.state}. 
               We&apos;ve filtered requirements and tasks specific to your industry and location.
             </p>
@@ -387,15 +386,15 @@ export default function DashboardPage() {
 
       {/* Business Type Specific Insights */}
       {profile && (
-        <div className="mb-8 p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-lg border border-slate-200">
-          <h3 className="font-semibold text-slate-900 mb-3">
+        <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+          <h3 className="font-semibold text-white mb-3">
             Industry Insights for {profile.business_type.replace('_', ' ')} Businesses
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {getBusinessTypeInsights(profile.business_type).map((insight, idx) => (
               <div key={idx} className="flex gap-3">
-                <span className="text-lg">✓</span>
-                <p className="text-sm text-slate-700">{insight}</p>
+                <span className="text-cyan-400">✓</span>
+                <p className="text-sm text-white/60">{insight}</p>
               </div>
             ))}
           </div>
@@ -413,46 +412,44 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div className="rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+          <div className="space-y-3">
             <Link
               href="/roadmap"
-              className="flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all"
             >
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-white/70">
                 View Roadmap
               </span>
-              <ArrowRight className="h-4 w-4 text-slate-400" />
+              <ArrowRight className="h-4 w-4 text-white/30" />
             </Link>
             <Link
               href="/compliance"
-              className="flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all"
             >
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-white/70">
                 Add License
               </span>
-              <ArrowRight className="h-4 w-4 text-slate-400" />
+              <ArrowRight className="h-4 w-4 text-white/30" />
             </Link>
             <Link
               href="/inspections"
-              className="flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors"
+              className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all"
             >
-              <span className="text-sm font-medium text-slate-700">
+              <span className="text-sm font-medium text-white/70">
                 Track Inspection
               </span>
-              <ArrowRight className="h-4 w-4 text-slate-400" />
+              <ArrowRight className="h-4 w-4 text-white/30" />
             </Link>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Alerts */}
       {(upcomingLicenses?.length || upcomingInspectionsList?.length) && (
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">
+          <h2 className="text-lg font-semibold text-white mb-4">
             Upcoming Deadlines
           </h2>
           <div className="space-y-3">
@@ -475,12 +472,12 @@ export default function DashboardPage() {
       {/* Upcoming Tasks - Customized for Business Type & State */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-lg font-semibold text-white">
             Your Customized Roadmap
           </h2>
           <Link
             href="/roadmap"
-            className="text-sm font-medium text-primary hover:underline flex items-center gap-1"
+            className="text-sm font-medium text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition"
           >
             View all steps <ArrowRight className="h-4 w-4" />
           </Link>
@@ -491,26 +488,26 @@ export default function DashboardPage() {
             {upcomingTasks.map((userTask) => (
               <div
                 key={userTask.id}
-                className="flex items-center gap-4 p-4 bg-white rounded-lg border border-slate-200"
+                className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10 hover:border-white/20 transition-colors"
               >
-                <div className="h-10 w-10 bg-slate-100 rounded-lg flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-slate-500" />
+                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-orange-500/20 border border-white/10 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-cyan-400" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-medium text-slate-900">
+                  <h3 className="font-medium text-white">
                     {userTask.task?.title}
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-white/50">
                     {userTask.task?.description?.substring(0, 80)}...
                   </p>
                   {userTask.task?.timeline_estimate && (
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-white/30 mt-1">
                       ⏱️ {userTask.task?.timeline_estimate}
                     </p>
                   )}
                 </div>
                 <Link href="/roadmap">
-                  <button className="px-4 py-2 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary hover:text-white transition-colors">
+                  <button className="px-4 py-2 text-sm font-medium text-cyan-400 border border-cyan-500/30 rounded-xl hover:bg-cyan-500/10 transition-colors">
                     Continue
                   </button>
                 </Link>
@@ -518,17 +515,17 @@ export default function DashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 bg-white rounded-lg border border-slate-200">
-            <ListChecks className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900">
+          <div className="text-center py-12 rounded-2xl bg-white/5 border border-white/10">
+            <ListChecks className="h-12 w-12 text-white/20 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-white">
               Set Up Your Business
             </h3>
-            <p className="text-slate-500 mt-2">
+            <p className="text-white/50 mt-2">
               Complete the onboarding to get your personalized task list based on your business type and state
             </p>
             <a
               href="/onboarding"
-              className="inline-block mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+              className="inline-block mt-4 px-6 py-2.5 bg-gradient-to-r from-cyan-500 to-orange-500 text-white rounded-full text-sm font-semibold hover:from-cyan-400 hover:to-orange-400 transition-all"
             >
               Get Started
             </a>
