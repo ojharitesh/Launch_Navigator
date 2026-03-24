@@ -236,13 +236,13 @@ export default function DashboardPage() {
         const filteredTasks = userTasks.filter((userTask) => {
           const task = userTask.task as any;
           if (!task) return false;
-          
+
           // Task matches if it's for the user's state OR it's marked general
           const stateMatch = task.state === profile?.state || task.state === 'general';
-          
+
           // Task matches if it's for the user's business type OR it's marked general
           const businessTypeMatch = task.business_type === profile?.business_type || task.business_type === 'general';
-          
+
           return stateMatch && businessTypeMatch;
         });
 
@@ -349,7 +349,7 @@ export default function DashboardPage() {
           <div>
             <h3 className="font-semibold text-white">Customized for Your Business</h3>
             <p className="text-sm text-white/50 mt-1">
-              Your roadmap is tailored for a {profile?.business_type?.replace('_', ' ')} business in {profile?.state}. 
+              Your roadmap is tailored for a {profile?.business_type?.replace('_', ' ')} business in {profile?.state}.
               We&apos;ve filtered requirements and tasks specific to your industry and location.
             </p>
           </div>
