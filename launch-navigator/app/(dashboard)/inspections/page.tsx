@@ -16,7 +16,52 @@ import {
   Trash2,
   X,
   Loader2,
+  Sparkles,
 } from "lucide-react";
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+const FALLBACK_CADENCE_DAYS: Array<{ keywords: string[]; days: number }> = [
+  { keywords: ["health", "food", "sanitation"], days: 90 },
+  { keywords: ["safety", "osha"], days: 180 },
+  { keywords: ["fire"], days: 180 },
+  { keywords: ["building", "zoning", "facility"], days: 365 },
+];
+
+function toDateOnlyString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(dateString: string, days: number): string {
+  const base = new Date(`${dateString}T12:00:00`);
+  base.setDate(base.getDate() + days);
+  return toDateOnlyString(base);
+}
+
+function clampDays(days: number): number {
+  return Math.max(30, Math.min(730, Math.round(days)));
+}
+
+function inferFallbackCadenceDays(inspectionType: string): number {
+  const normalizedType = inspectionType.trim().toLowerCase();
+  const matched = FALLBACK_CADENCE_DAYS.find(({ keywords }) =>
+    keywords.some((keyword) => normalizedType.includes(keyword))
+  );
+  return matched?.days ?? 365;
+}
+
+function median(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  if (sorted.length % 2 === 0) {
+    return (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+  return sorted[mid];
+}
 
 export default function InspectionsPage() {
   const [inspections, setInspections] = useState<any[]>([]);
@@ -30,6 +75,7 @@ export default function InspectionsPage() {
   const [lastInspectionDate, setLastInspectionDate] = useState("");
   const [nextInspectionEstimate, setNextInspectionEstimate] = useState("");
   const [notes, setNotes] = useState("");
+  const [suggestionHint, setSuggestionHint] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -66,12 +112,14 @@ export default function InspectionsPage() {
       setLastInspectionDate(inspection.last_inspection_date || "");
       setNextInspectionEstimate(inspection.next_inspection_estimate || "");
       setNotes(inspection.notes || "");
+      setSuggestionHint(null);
     } else {
       setEditingInspection(null);
       setInspectionType("");
       setLastInspectionDate("");
       setNextInspectionEstimate("");
       setNotes("");
+      setSuggestionHint(null);
     }
     setShowModal(true);
   };
@@ -79,6 +127,49 @@ export default function InspectionsPage() {
   const closeModal = () => {
     setShowModal(false);
     setEditingInspection(null);
+    setSuggestionHint(null);
+  };
+
+  const suggestNextInspectionDate = () => {
+    if (!lastInspectionDate) {
+      setSuggestionHint("Add last inspection date first to get a prediction.");
+      return;
+    }
+
+    const normalizedType = inspectionType.trim().toLowerCase();
+
+    const relevantHistory = inspections.filter((inspection) => {
+      if (editingInspection && inspection.id === editingInspection.id) return false;
+      if (!inspection.last_inspection_date || !inspection.next_inspection_estimate) return false;
+      return inspection.inspection_type?.trim().toLowerCase() === normalizedType;
+    });
+
+    const historicalIntervals = relevantHistory
+      .map((inspection) => {
+        const last = new Date(`${inspection.last_inspection_date}T12:00:00`);
+        const next = new Date(`${inspection.next_inspection_estimate}T12:00:00`);
+        const rawDays = (next.getTime() - last.getTime()) / MS_PER_DAY;
+        return rawDays > 0 ? rawDays : null;
+      })
+      .filter((days): days is number => days !== null);
+
+    const cadenceDays =
+      historicalIntervals.length > 0
+        ? clampDays(median(historicalIntervals))
+        : inferFallbackCadenceDays(inspectionType);
+
+    const suggestedDate = addDays(lastInspectionDate, cadenceDays);
+    setNextInspectionEstimate(suggestedDate);
+
+    if (historicalIntervals.length > 0) {
+      setSuggestionHint(
+        `Predicted using your ${historicalIntervals.length} past ${inspectionType || "inspection"} record(s): every ~${cadenceDays} days.`
+      );
+    } else {
+      setSuggestionHint(
+        `Predicted using a default schedule for this inspection type: every ~${cadenceDays} days.`
+      );
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -346,6 +437,22 @@ export default function InspectionsPage() {
                   onChange={(e) => setNextInspectionEstimate(e.target.value)}
                   className="mt-1"
                 />
+                <div className="mt-2 flex items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    onClick={suggestNextInspectionDate}
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Suggest from my history
+                  </button>
+                  {nextInspectionEstimate && (
+                    <span className="text-xs text-slate-500">Selected: {formatDate(nextInspectionEstimate)}</span>
+                  )}
+                </div>
+                {suggestionHint && (
+                  <p className="mt-2 text-xs text-slate-500">{suggestionHint}</p>
+                )}
               </div>
 
               <div>
