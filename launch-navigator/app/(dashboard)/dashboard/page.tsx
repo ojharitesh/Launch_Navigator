@@ -5,6 +5,7 @@ import Link from "next/link";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { ProgressCard } from "@/components/dashboard/ProgressCard";
 import { AlertCard } from "@/components/dashboard/AlertCard";
+import { LocalInsights } from "@/components/dashboard/LocalInsights";
 import { createClient } from "@/lib/supabase";
 import { formatDate, getDaysUntilText, isWithinDays } from "@/lib/utils";
 import type { DashboardStats, Inspection, License, Profile, UserTask, BusinessType } from "@/types";
@@ -400,6 +401,9 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Local Insights Feature */}
+      <LocalInsights state={profile?.state} businessType={profile?.business_type} />
 
       {/* Progress & Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

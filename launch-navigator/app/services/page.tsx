@@ -16,6 +16,8 @@ import {
   CalendarCheck,
   Gauge,
   Briefcase,
+  Newspaper,
+  Target,
 } from "lucide-react";
 
 const services = [
@@ -37,16 +39,25 @@ const services = [
     description: "Track progress and optimize your operational strategy with real-time insights.",
     gradient: "from-cyan-500/20 to-teal-500/20",
   },
+  {
+    icon: Newspaper,
+    title: "Local Intelligence",
+    description: "Monitor hyper-local news, consumer spending trends, and competitor movements.",
+    gradient: "from-purple-500/20 to-pink-500/20",
+  },
 ];
 
 const features = [
   "Regulatory compliance tracking",
+  "Hyper-local market intelligence",
+  "Competitor radar and history",
   "Business launch planning",
   "Team collaboration tools",
   "Performance analytics",
 ];
 
 const capabilities = [
+  { icon: Target, title: "Competitor Radar", desc: "Track local market movements and competitor openings." },
   { icon: CalendarCheck, title: "Deadline Management", desc: "Never miss a filing or renewal date." },
   { icon: Gauge, title: "Progress Tracking", desc: "Visual roadmaps for every launch phase." },
   { icon: Briefcase, title: "Document Storage", desc: "Organized, secure, and always accessible." },
@@ -74,7 +85,7 @@ export default function ServicesPage() {
             <h2 className="text-4xl font-bold text-white">Core Offerings</h2>
           </AnimatedSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {services.map((item, i) => (
               <AnimatedSection key={item.title} delay={i * 0.1}>
                 <div className="group rounded-2xl p-8 bg-white/5 border border-white/10 backdrop-blur-sm hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-300 h-full">
@@ -146,7 +157,7 @@ export default function ServicesPage() {
             <h2 className="text-4xl font-bold text-white">Additional Capabilities</h2>
           </AnimatedSection>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {capabilities.map((item, i) => (
               <AnimatedSection key={item.title} delay={i * 0.1}>
                 <div className="text-center p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm hover:border-cyan-400/30 hover:bg-white/[0.07] transition-all duration-300">

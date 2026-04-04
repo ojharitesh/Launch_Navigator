@@ -228,33 +228,14 @@ export default function ShaderShowcase() {
           </motion.div>
 
           <motion.h1
-            className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-none tracking-tight"
+            className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-[1.1] tracking-tight"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            <motion.span
-              className="block font-light text-white/90 text-3xl md:text-4xl lg:text-5xl mb-2 tracking-wider"
-              style={{
-                background: "linear-gradient(135deg, #ffffff 0%, #06b6d4 30%, #f97316 70%, #ffffff 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                filter: "url(#text-glow)",
-              }}
-              animate={{
-                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-              }}
-              transition={{
-                duration: 8,
-                repeat: Number.POSITIVE_INFINITY,
-                ease: "linear",
-              }}
-            >
-              Start your business
-            </motion.span>
-            <span className="block font-black text-white drop-shadow-2xl">the right way</span>
-            <span className="block font-light text-white/90">with BizMap</span>
+            <span className="block text-white/90">Start your business</span>
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-cyan-200 to-white">the right way</span>
+            <span className="block text-white/90">with BizMap.</span>
           </motion.h1>
 
           <motion.p
@@ -302,20 +283,35 @@ export default function ShaderShowcase() {
         animate={{ opacity: 1, x: 0, scale: 1 }}
         transition={{ duration: 0.8, delay: 1.2, ease: [0.25, 0.4, 0.25, 1] }}
       >
-        <div className="relative w-96 h-[28rem] rounded-2xl overflow-hidden border border-white/15 shadow-2xl">
-          <Image
-            src="/images/professional.jpg"
-            alt="Business professional"
-            fill
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-          <div className="absolute bottom-5 left-5 right-5">
-            <p className="text-white/90 text-base font-medium">Launch with confidence</p>
-            <p className="text-white/50 text-sm mt-1">Join 500+ founders using BizMap</p>
+        <div className="relative w-[600px] h-[480px] flex gap-6 items-center">
+          {/* Left image */}
+          <div className="relative flex-1 h-[400px] rounded-2xl overflow-hidden border border-white/10 shadow-2xl transform translate-y-6 transition-transform hover:-translate-y-2 duration-500">
+            <Image
+              src="/images/professional.jpg"
+              alt="Business professional"
+              fill
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-black/10 hover:bg-transparent transition-colors duration-500" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent" />
           </div>
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-400/40 to-transparent" />
+
+          {/* Right image */}
+          <div className="relative flex-1 h-[440px] rounded-2xl overflow-hidden border border-white/20 shadow-2xl transform -translate-y-6 transition-transform hover:-translate-y-8 duration-500">
+            <Image
+              src="/images/women.jpeg"
+              alt="Business founders"
+              fill
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+            <div className="absolute bottom-5 left-5 right-5">
+              <p className="text-white/90 text-sm font-medium tracking-tight">Launch with confidence</p>
+              <p className="text-white/50 text-xs mt-1">Join 500+ founders using BizMap</p>
+            </div>
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-400/50 to-transparent" />
+          </div>
         </div>
       </motion.div>
 
