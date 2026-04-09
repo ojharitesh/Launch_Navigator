@@ -56,6 +56,7 @@ export interface License {
   expiration_date: string;
   renewal_frequency: string;
   notes: string | null;
+  image_url?: string | null;
   created_at: string;
 }
 

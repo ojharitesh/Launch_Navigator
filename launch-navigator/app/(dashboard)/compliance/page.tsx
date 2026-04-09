@@ -16,6 +16,7 @@ import {
   Trash2,
   X,
   Loader2,
+  Image as ImageIcon,
 } from "lucide-react";
 
 export default function CompliancePage() {
@@ -30,6 +31,8 @@ export default function CompliancePage() {
   const [expirationDate, setExpirationDate] = useState("");
   const [renewalFrequency, setRenewalFrequency] = useState("annual");
   const [notes, setNotes] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -66,13 +69,16 @@ export default function CompliancePage() {
       setExpirationDate(license.expiration_date);
       setRenewalFrequency(license.renewal_frequency);
       setNotes(license.notes || "");
+      setExistingImageUrl(license.image_url || null);
     } else {
       setEditingLicense(null);
       setLicenseName("");
       setExpirationDate("");
       setRenewalFrequency("annual");
       setNotes("");
+      setExistingImageUrl(null);
     }
+    setImageFile(null);
     setShowModal(true);
   };
 
@@ -92,33 +98,63 @@ export default function CompliancePage() {
 
       if (!user) return;
 
+      // Handle Image Upload
+      let publicImageUrl = editingLicense?.image_url || null;
+
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${user.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('license_documents')
+          .upload(fileName, imageFile, { upsert: true });
+
+        if (uploadError) {
+          console.error("Error uploading image:", uploadError);
+          alert("Failed to upload image. Please try again.");
+          setSaving(false);
+          return;
+        } else if (uploadData) {
+          const { data: urlData } = supabase.storage
+            .from('license_documents')
+            .getPublicUrl(uploadData.path);
+          publicImageUrl = urlData.publicUrl;
+        }
+      }
+
       if (editingLicense) {
         // Update existing license
-        await supabase
+        const { error } = await supabase
           .from("licenses")
           .update({
             license_name: licenseName,
             expiration_date: expirationDate,
             renewal_frequency: renewalFrequency,
             notes: notes || null,
+            image_url: publicImageUrl,
           })
           .eq("id", editingLicense.id);
+        
+        if (error) throw error;
       } else {
         // Create new license
-        await supabase.from("licenses").insert({
+        const { error } = await supabase.from("licenses").insert({
           id: crypto.randomUUID(),
           user_id: user.id,
           license_name: licenseName,
           expiration_date: expirationDate,
           renewal_frequency: renewalFrequency,
           notes: notes || null,
+          image_url: publicImageUrl,
         });
+        
+        if (error) throw error;
       }
 
       await fetchLicenses();
       closeModal();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving license:", error);
+      alert("Error saving: " + (error.message || "Please check your database policies."));
     } finally {
       setSaving(false);
     }
@@ -257,6 +293,11 @@ export default function CompliancePage() {
                             {license.notes}
                           </p>
                         )}
+                        {license.image_url && (
+                          <a href={license.image_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm font-medium text-cyan-600 hover:text-cyan-700 mt-3 bg-cyan-50 px-2 py-1 rounded-md border border-cyan-100 transition-colors">
+                            <ImageIcon className="h-4 w-4" /> View Document
+                          </a>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -358,6 +399,27 @@ export default function CompliancePage() {
                   onChange={(e) => setNotes(e.target.value)}
                   className="flex w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm min-h-[80px]"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="photo">License Document/Photo</Label>
+                <Input
+                  id="photo"
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  className="mt-1"
+                />
+                {existingImageUrl && !imageFile && (
+                  <p className="text-xs text-slate-500 mt-2">
+                    Current file: <a href={existingImageUrl} target="_blank" rel="noreferrer" className="text-cyan-600 hover:underline">View Document</a>
+                  </p>
+                )}
+                {imageFile && (
+                  <p className="text-xs text-slate-500 mt-2">
+                    Selected file: {imageFile.name}
+                  </p>
+                )}
               </div>
 
               <div className="flex gap-3 pt-4">

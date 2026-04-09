@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS licenses (
     expiration_date DATE NOT NULL,
     renewal_frequency TEXT DEFAULT 'annual',
     notes TEXT,
+    image_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -220,3 +221,31 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Create Storage bucket for license documents
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('license_documents', 'license_documents', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Public read access for the bucket
+DROP POLICY IF EXISTS "Public view license documents" ON storage.objects;
+CREATE POLICY "Public view license documents" ON storage.objects
+    FOR SELECT USING (bucket_id = 'license_documents');
+
+-- Authenticated upload access
+DROP POLICY IF EXISTS "Auth upload license documents" ON storage.objects;
+CREATE POLICY "Auth upload license documents" ON storage.objects
+    FOR INSERT WITH CHECK (bucket_id = 'license_documents' AND auth.role() = 'authenticated');
+
+-- Authenticated update access
+DROP POLICY IF EXISTS "Auth update license documents" ON storage.objects;
+CREATE POLICY "Auth update license documents" ON storage.objects
+    FOR UPDATE USING (bucket_id = 'license_documents' AND auth.role() = 'authenticated');
+
+-- Authenticated delete access
+DROP POLICY IF EXISTS "Auth delete license documents" ON storage.objects;
+CREATE POLICY "Auth delete license documents" ON storage.objects
+    FOR DELETE USING (bucket_id = 'license_documents' AND auth.role() = 'authenticated');
+
+-- IMPORTANT: Explicitly add the image_url column if the table already existed
+ALTER TABLE licenses ADD COLUMN IF NOT EXISTS image_url TEXT;
