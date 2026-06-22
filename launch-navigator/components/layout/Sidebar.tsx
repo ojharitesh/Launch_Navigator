@@ -17,7 +17,6 @@ import {
   Moon,
   Sun,
   Rocket,
-  Newspaper,
 } from "lucide-react";
 import { useState } from "react";
 import type { DashboardTheme } from "@/hooks/useDashboardTheme";
@@ -27,7 +26,7 @@ const navigation = [
   { name: "Roadmap", href: "/roadmap", icon: ListChecks },
   { name: "Compliance", href: "/compliance", icon: Shield },
   { name: "Inspections", href: "/inspections", icon: ClipboardCheck },
-  { name: "Local Intel", href: "/intelligence", icon: Newspaper },
+
   { name: "POS Comparison", href: "/pos-comparison", icon: ShoppingCart },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
